@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            margin: 20px auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        .header-left h2, .header-left p {
+            margin: 0;
+            margin-right: 20px;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        a {
+            padding: 10px 20px;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .back-button {
+            background-color: #2196F3;
+        }
+        .back-button:hover {
+            background-color: #1976D2;
+        }
+        .logout-button {
+            background-color: #4CAF50;
+        }
+        .logout-button:hover {
+            background-color: #45a049;
+        }
+        .create-button {
+            background-color: #f39c12;
+            margin-top: 20px;
+            display: inline-block;
+        }
+        .create-button:hover {
+            background-color: #e67e22;
+        }
+        .product-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            gap: 36px;
+        }
+        .card {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 200px;
+            text-align: left;
+            transition: box-shadow 0.3s;
+        }
+        .card:hover {
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2); /* Highlight effect on hover */
+        }
+        .card img {
+            width: 210px;
+            height: 180px;
+            border-radius: 10px;
+            object-fit: cover;
+            align-self: center;
+            margin-bottom: 10px;
+        }
+        .card-content {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .card h4 {
+            margin: 10px 0 5px;
+        }
+        .card p {
+            margin: 5px 0;
+        }
+        .card .price {
+            margin-bottom: 5px;
+        }
+        .card .quantity {
+            margin-bottom: 15px;
+        }
+        .card .remove-from-cart-button {
+            background-color: #69bcda;
+            padding: 10px 20px;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            align-self: flex-start;
+            border: none;
+            cursor: pointer;
+        }
+        .card .remove-from-cart-button:hover {
+            background-color: #61c0da;
+        }
+    </style>
+</head>
+<body>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        $(document).ready(function() {
+            $('.remove-from-cart-button').click(function(event) {
+                event.preventDefault();
+                var item_id = $(this).data('id');
+                var csrf_token = getCookie('csrftoken');
+                $.ajax({
+                    url: '/remove_from_cart/' + item_id + '/',
+                    type: 'POST',
+                    data: {
+                        csrfmiddlewaretoken: csrf_token
+                    },
+                    success: function(response) {
+                        alert(response.message);
+                        if (response.status === 'success') {
+                            location.reload();
+                        }
+                    }
+                });
+            });
+
+            $('.product-list .card').each(function() {
+                var price = parseFloat($(this).find('.price').data('price'));
+                var quantity = parseInt($(this).find('.quantity').data('quantity'));
+                var total = price * quantity;
+                $(this).find('.price').text('Rs: ' + total);
+            });
+        });
+    </script>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h2>Ecom</h2>
+                <p>Welcome</p>
+            </div>
+            <div class="header-right">
+                <a href="{% url 'home' %}" class="back-button">Back</a>
+                <a href="" class="logout-button">Logout</a>
+            </div>
+        </div>
+        <h3>Cart</h3>
+        <div class="product-list">
+            {% for cart_item in cart_items %}
+                <div class="card">
+                    <img src="{{ cart_item.product.img_url }}" alt="{{ cart_item.product.name }}">
+                    <div class="card-content">
+                        <h4>{{ cart_item.product.name }}</h4>
+                        <p class="price" data-price="{{ cart_item.product.price }}">Rs: {{ cart_item.product.price }}</p>
+                        <p class="quantity" data-quantity="{{ cart_item.quantity }}">Quantity: {{ cart_item.quantity }}</p>
+                        <form method="POST" action="{% url 'remove_from_cart' cart_item.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="remove-from-cart-button" data-id="{{ cart_item.id }}">Remove</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

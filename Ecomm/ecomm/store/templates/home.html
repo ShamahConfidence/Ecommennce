@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            margin: 20px auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        .header-left h2, .header-left p {
+            margin: 0;
+            margin-right: 20px;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .header-right .fas {
+            font-size: 1.5em; /* Increase icon size */
+            margin-right: 10px; /* Add some space between the icon and the button */
+            color: #2374d1;
+        }
+        a {
+            padding: 10px 20px;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .logout-button {
+            background-color: #4CAF50;
+        }
+        .logout-button:hover {
+            background-color: #45a049;
+        }
+        .create-button {
+            background-color: #f39c12;
+            margin-top: 20px;
+            display: inline-block;
+        }
+        .create-button:hover {
+            background-color: #e67e22;
+        }
+        .product-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start; /* Align items to the start of the container */
+            gap: 36px; /* Adds space between the cards */
+        }
+        .card {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 200px;
+            text-align: left;
+            transition: box-shadow 0.3s;
+        }
+        .card:hover {
+            box-shadow: 0 0 20px rgba(0, 7, 10, 0.2); /* Highlight effect on hover */
+        }
+        .card img {
+            width: 210px; /* Set a fixed width */
+            height: 180px; /* Set a fixed height */
+            border-radius: 10px;
+            object-fit: cover; /* Ensures the image covers the entire area */
+            align-self: center;
+            margin-bottom: 10px;
+        }
+        .card-content {
+            width: 100%; /* Ensure content spans full width */
+        }
+        .card h4 {
+            margin: 10px 0 5px;
+        }
+        .card p {
+            margin: 5px 0;
+        }
+        .card .price {
+            margin-bottom: 10px; /* Add space below the price */
+        }
+        .card .add-to-cart-button {
+            background-color: #28a745;
+            margin-top: 10px;
+            padding: 10px 20px;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            align-self: flex-start;
+        }
+        .card .add-to-cart-button:hover {
+            background-color: #218838;
+        }
+        .quantity-input {
+        width: 30px; /* Adjust the width as needed */
+        margin-right: 5px;
+        padding: 5px;
+    }
+    </style>
+</head>
+<body>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.add-to-cart-button').click(function(event) {
+                event.preventDefault();
+    
+                var form = $(this).closest('form');
+                var product_id = form.find('input[name="product_id"]').val();
+                var quantity = form.find('input[name="quantity"]').val();
+                var csrf_token = form.find('input[name="csrfmiddlewaretoken"]').val();
+    
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: {
+                        product_id: product_id,
+                        quantity: quantity,
+                        csrfmiddlewaretoken: csrf_token
+                    },
+                    success: function(response) {
+                        alert(response.message);
+                        location.reload(); // Refresh the page
+                    }
+                });
+            });
+        });
+    </script>
+    
+
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h2>Ecom</h2>
+                <p>Welcome</p>
+            </div>
+            <div class="header-right">
+                <a href="{% url 'cart' %}"><i class="fas fa-shopping-cart"></i></a>
+                <a href="" class="logout-button">Logout</a>
+            </div>
+        </div>
+        <h3>Store</h3>
+        <div class="product-list">
+            {% for product in product %}
+                <div class="card">
+                    <img src="{{ product.img_url }}" alt="{{ product.name }}"> 
+                    <div class="card-content">
+                        <h4>{{ product.name }}</h4>
+                        <p class="price">Rs: {{ product.price }}</p>
+                        <form method="POST" action="{% url 'add_to_cart' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="product_id" value="{{ product.id }}">
+                            <label for="quantity">Quantity:</label>
+                            <input type="number" name="quantity" class="quantity-input" value="1" min="1">
+                            <button type="submit" class="add-to-cart-button">Add to Cart</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
